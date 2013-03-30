@@ -10,6 +10,7 @@
 
 @interface FlashCardViewController ()
 
+@property (nonatomic) BOOL gameStarted;
 @property (nonatomic) NSUInteger clicks;
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *buttonList;
 @property (nonatomic) NSUInteger buttonsToPlayWith;
@@ -21,13 +22,17 @@
 
 @synthesize buttonsToPlayWith = _buttonsToPlayWith;
 
-- (void)setButtonsToPlayWith:(NSUInteger)buttonsToPlayWith {
-	[self hideButtons:self.buttonList];
-	for (int i = 0; i < buttonsToPlayWith; i++) {
+- (void)enableActiveButtons {
+	for (int i = 0; i < self.buttonsToPlayWith; i++) {
 		UIButton *button = self.buttonList[i];
 		[self showButton:button];
 	}
+}
+
+- (void)setButtonsToPlayWith:(NSUInteger)buttonsToPlayWith {
+	[self hideButtons:self.buttonList];
 	_buttonsToPlayWith = buttonsToPlayWith;
+	[self enableActiveButtons];
 	NSLog(@"Playing with %d buttons.", _buttonsToPlayWith);
 }
 
@@ -77,6 +82,11 @@
 }
 
 - (IBAction)showTitle:(UIButton *)sender {
+	if (self.gameStarted == NO) {
+		self.gameStarted = YES;
+		[self.segmentedControl setEnabled:NO];
+		NSLog(@"Game started!");
+	}
 	NSLog(@"Button clicked. Click total: %d", self.clicks++);
 	
 	[sender setTitle:@"Hi!" forState:UIControlStateNormal];
@@ -91,7 +101,13 @@
 	UIButton *button = timer.userInfo;
 	[button setTitle:@"Button" forState:UIControlStateNormal];
 	[button setAlpha:1.0];
-	[self enableButtons:self.buttonList];
+	[self enableActiveButtons];
+}
+
+- (IBAction)resetGame:(UIButton *)sender {
+	[self.segmentedControl setEnabled:YES];
+	[self setButtonsToPlayWith: [self.segmentedControl selectedSegmentIndex]];
+	[self setGameStarted:NO];
 }
 
 //
@@ -102,7 +118,7 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
 	[self.segmentedControl addTarget:self action:@selector(pickNumberOfButtons:forEvent:) forControlEvents:UIControlEventValueChanged];
-	[self setButtonsToPlayWith: [self.segmentedControl selectedSegmentIndex]];
+	[self resetGame:nil];
 }
 
 - (void)didReceiveMemoryWarning
